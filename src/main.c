@@ -5,6 +5,8 @@
 #define F_CPU 14745600
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include <avr/io.h>
@@ -35,30 +37,20 @@ int main() {
             _FDEV_SETUP_RW);
     stdin = stdout = &uart_stream;
 
-    uint8_t result;
-    char tmp_c;
-    int16_t count = 0;
+    /* An entire screen update is 80 characters, but fgets() may snarf 82
+     * when it includes the CRLF terminator.*/
+    char data[82];
 
     // write message to LCD
     lcd_home();
     lcd_write_string(PSTR("LCD Miner v0.1"));
-    lcd_line_two();
 
     while(1) {
-        result = scanf_P(PSTR("%c"), &tmp_c);
-        if (result == 1) {
-            lcd_line_two();
-            lcd_write_byte(tmp_c);
-            lcd_write_string(PSTR("     <   "));
-        }
-        lcd_line_three();
-        lcd_write_string(PSTR("result: "));
-        lcd_write_int16(result);
-        lcd_write_string(PSTR(" count: "));
-        lcd_write_int16(count++);
-
+        fgets(data, 82, stdin);
+        data[strlen(data)-1] = '\0';
+        lcd_home();
+        fprintf_P(&lcd_stream, PSTR("%s"), data);
     }
-
 
     return 0;
 }
